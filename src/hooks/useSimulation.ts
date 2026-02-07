@@ -9,6 +9,7 @@ import { applyInvestigationConsequences, applyAlertResponseConsequences } from '
 import { updateObjectiveProgress, applyObjectiveRewards } from '../engine/objectives';
 import { checkAchievements, calculateScore } from '../engine/achievements';
 import { investigatePath, initializeInvestigationBranches, calculateThreatReduction, getMaxInvestigationLevel } from '../engine/investigation';
+import { updateAllConnections, applyNetworkEffects, disruptConnection } from '../engine/relationships';
 import { loadPlayerState, savePlayerState, type PersistedState } from './usePersistence';
 import { useToast } from './useToast';
 import type { SimulationState, Entity, TimelineEvent, Achievement, InvestigationPath } from '../data/ontology';
@@ -111,7 +112,19 @@ export function useSimulation(): UseSimulationReturn {
 
         // Tick for full state regeneration (more frequently at higher speeds)
         const slowInterval = setInterval(() => {
-            setState(getSimulationState(timeSpeed));
+            setState(prev => {
+                const newState = getSimulationState(timeSpeed);
+                // Update connection dynamics
+                const updatedConnections = updateAllConnections(
+                    newState.connections,
+                    newState.entities,
+                    Math.max(1000, 30000 / timeSpeed)
+                );
+                return {
+                    ...newState,
+                    connections: updatedConnections,
+                };
+            });
         }, Math.max(1000, 30000 / timeSpeed));
 
         return () => {
@@ -473,6 +486,23 @@ export function useSimulation(): UseSimulationReturn {
                         break;
                     case 'resolve':
                         flags.resolved = !flags.resolved;
+
+                        // Apply network effects when resolving an entity
+                        if (flags.resolved) {
+                            const networkResult = applyNetworkEffects(
+                                entityId,
+                                prev.entities,
+                                prev.connections
+                            );
+                            updatedConnections = networkResult.connections;
+
+                            if (networkResult.effects.length > 0) {
+                                showToast({
+                                    type: 'info',
+                                    message: `Network disrupted: ${networkResult.effects[0]}`,
+                                });
+                            }
+                        }
                         break;
                 }
 

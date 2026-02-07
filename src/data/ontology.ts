@@ -50,12 +50,34 @@ export interface Entity {
     totalEvidenceQuality?: number;  // Combined evidence quality score
 }
 
+export type ConnectionType =
+    | 'business_partnership'
+    | 'family_tie'
+    | 'criminal_association'
+    | 'digital_communication'
+    | 'financial_transaction'
+    | 'personal_relationship'
+    | 'organizational_link';
+
+export interface ConnectionMetadata {
+    createdAt: number;           // timestamp when connection was discovered
+    lastActive: number;          // timestamp of last activity
+    activityFrequency: number;   // 0-100, how often this connection is used
+    disrupted: boolean;          // whether connection has been disrupted
+    disruptedAt?: number;        // when it was disrupted
+    canReform: boolean;          // whether connection can be restored
+    reformProgress?: number;     // 0-100, progress towards reformation
+}
+
 export interface Connection {
     from: number;           // entity ID
     to: number;             // entity ID
-    type: string;           // relationship label
-    strength: number;       // 0.0 - 1.0
+    type: string;           // relationship label (legacy)
+    connectionType?: ConnectionType;  // detailed connection type
+    strength: number;       // 0.0 - 1.0 (dynamic)
+    baseStrength?: number;  // original strength before modifications
     evidence: number;       // supporting evidence count
+    metadata?: ConnectionMetadata;
 }
 
 export interface TimelineEvent {
