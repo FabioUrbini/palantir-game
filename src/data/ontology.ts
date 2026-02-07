@@ -1,5 +1,26 @@
 // data/ontology.ts - Type definitions for the Palantir simulation
 
+export type InvestigationPath = 'financial' | 'cyber' | 'humint';
+
+export interface Evidence {
+    id: string;
+    type: 'document' | 'recording' | 'transaction' | 'communication' | 'witness';
+    title: string;
+    description: string;
+    quality: 'low' | 'medium' | 'high';
+    discoveredAt: number;  // timestamp
+    relatedPath: InvestigationPath;
+    impact: number;  // 0-100, affects investigation success
+}
+
+export interface InvestigationBranch {
+    path: InvestigationPath;
+    level: number;  // 0-3
+    evidence: Evidence[];
+    unlocked: boolean;
+    insights: string[];  // Discovered insights from this path
+}
+
 export interface Entity {
     id: number;
     name: string;
@@ -22,8 +43,11 @@ export interface Entity {
         investigated: boolean;
         resolved: boolean;
     };
-    investigationLevel?: number;  // 0-3
+    investigationLevel?: number;  // 0-3 (legacy, for backwards compatibility)
     lastActionTime?: number;      // timestamp
+    // Multi-stage investigation fields
+    investigationBranches?: InvestigationBranch[];
+    totalEvidenceQuality?: number;  // Combined evidence quality score
 }
 
 export interface Connection {

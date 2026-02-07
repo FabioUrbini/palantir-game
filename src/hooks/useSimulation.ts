@@ -8,9 +8,10 @@ import { updateSourceCounters } from '../engine/sources';
 import { applyInvestigationConsequences, applyAlertResponseConsequences } from '../engine/consequences';
 import { updateObjectiveProgress, applyObjectiveRewards } from '../engine/objectives';
 import { checkAchievements, calculateScore } from '../engine/achievements';
+import { investigatePath, initializeInvestigationBranches, calculateThreatReduction, getMaxInvestigationLevel } from '../engine/investigation';
 import { loadPlayerState, savePlayerState, type PersistedState } from './usePersistence';
 import { useToast } from './useToast';
-import type { SimulationState, Entity, TimelineEvent, Achievement } from '../data/ontology';
+import type { SimulationState, Entity, TimelineEvent, Achievement, InvestigationPath } from '../data/ontology';
 
 export interface UseSimulationReturn {
     state: SimulationState;
@@ -378,6 +379,16 @@ export function useSimulation(): UseSimulationReturn {
                     budgetCost = 100;
                     dataCreditCost = 1;
                     break;
+                case 'investigate_financial':
+                case 'investigate_cyber':
+                case 'investigate_humint':
+                    const branches = targetEntity.investigationBranches || initializeInvestigationBranches();
+                    const path = action.replace('investigate_', '') as InvestigationPath;
+                    const branch = branches.find(b => b.path === path);
+                    const level = branch ? branch.level : 0;
+                    budgetCost = 100 + (level * 100);
+                    dataCreditCost = 1 + level;
+                    break;
                 case 'watchlist':
                     const isOnWatchlist = targetEntity.playerFlags?.watchlist || false;
                     agentCost = isOnWatchlist ? -1 : 1;
@@ -423,6 +434,39 @@ export function useSimulation(): UseSimulationReturn {
                             entity = consequences.entity;
                             consequenceLog = consequences.log;
                         }
+                        break;
+                    case 'investigate_financial':
+                    case 'investigate_cyber':
+                    case 'investigate_humint':
+                        flags.investigated = true;
+                        const path = action.replace('investigate_', '') as InvestigationPath;
+                        const existingBranches = entity.investigationBranches || initializeInvestigationBranches();
+
+                        const result = investigatePath(entity, path, existingBranches);
+                        entity.investigationBranches = result.branches;
+                        entity.investigationLevel = getMaxInvestigationLevel(result.branches);
+                        entity.totalEvidenceQuality = result.branches.reduce((sum, b) =>
+                            sum + b.evidence.reduce((eSum, e) => eSum + e.impact, 0), 0
+                        ) / Math.max(1, result.branches.reduce((sum, b) => sum + b.evidence.length, 0));
+
+                        // Apply threat reduction based on evidence quality
+                        const threatReduction = calculateThreatReduction(result.branches);
+                        entity.risk = Math.max(0, entity.risk - threatReduction);
+
+                        // Log the investigation
+                        consequenceLog = {
+                            id: `inv-${entityId}-${path}-${Date.now()}`,
+                            time: Date.now(),
+                            type: 'investigation' as const,
+                            message: `${path.toUpperCase()} investigation revealed ${result.newEvidence.length} new evidence. ${result.newInsights.join(' ')}`,
+                            entityId: entityId,
+                        };
+
+                        // Show toast notification
+                        showToast({
+                            type: 'success',
+                            message: `Investigation: ${result.newEvidence.length} evidence collected. ${result.unlockedConnections ? 'New connections revealed!' : ''}`,
+                        });
                         break;
                     case 'watchlist':
                         flags.watchlist = !flags.watchlist;

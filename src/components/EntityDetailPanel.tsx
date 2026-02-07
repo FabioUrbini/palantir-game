@@ -2,11 +2,13 @@
 
 // components/EntityDetailPanel.tsx - Right sidebar for selected entity details
 
-import type { Entity, Connection, TimelineEvent, PlayerResources } from '../data/ontology';
+import { useState } from 'react';
+import type { Entity, Connection, TimelineEvent, PlayerResources, InvestigationPath } from '../data/ontology';
 import { ENTITY_ICONS, THREAT_COLORS, SOURCE_COLORS, ENTITY_COLORS } from '../data/theme';
 import ProgressRing from './ui/ProgressRing';
 import MiniSparkline from './ui/MiniSparkline';
 import EntityActions from './EntityActions';
+import InvestigationPanel from './InvestigationPanel';
 import { mulberry32 } from '../engine/seed';
 
 interface EntityDetailPanelProps {
@@ -28,6 +30,14 @@ export default function EntityDetailPanel({
     onClose,
     onAction
 }: EntityDetailPanelProps) {
+    const [showInvestigation, setShowInvestigation] = useState(false);
+
+    const handleInvestigatePath = (path: InvestigationPath) => {
+        onAction(entity!.id, `investigate_${path}`);
+    };
+
+    const canAffordInvestigation = resources.budget >= 100 && resources.dataCredits >= 1;
+
     if (!entity) {
         return (
             <div className="w-[260px] h-full bg-bg-secondary border-l border-[var(--border)] flex items-center justify-center">
@@ -112,6 +122,32 @@ export default function EntityDetailPanel({
                 resources={resources}
                 onAction={onAction}
             />
+
+            {/* Multi-Stage Investigation Toggle */}
+            <div className="px-4 py-3 border-b border-[var(--border)]">
+                <button
+                    onClick={() => setShowInvestigation(!showInvestigation)}
+                    className="w-full flex items-center justify-between text-left group"
+                >
+                    <span className="font-mono text-[9px] tracking-[1px] text-[var(--text-secondary)] group-hover:text-white transition-colors">
+                        🔬 MULTI-STAGE INVESTIGATION
+                    </span>
+                    <span className="text-accent text-xs">
+                        {showInvestigation ? '▼' : '▶'}
+                    </span>
+                </button>
+            </div>
+
+            {/* Investigation Panel (Collapsible) */}
+            {showInvestigation && (
+                <div className="px-4 py-3 border-b border-[var(--border)] bg-[var(--bg-primary)]">
+                    <InvestigationPanel
+                        entity={entity}
+                        onInvestigate={handleInvestigatePath}
+                        canAfford={canAffordInvestigation}
+                    />
+                </div>
+            )}
 
             {/* Risk score */}
             <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
