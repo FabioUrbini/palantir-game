@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "src/node_modules/.bin/next dev",
+    "build": "src/node_modules/.bin/next build",
+    "start": "src/node_modules/.bin/next start",
+    "lint": "src/node_modules/.bin/next lint"
   },
   "dependencies": {
     "next": "^14.2.0",
