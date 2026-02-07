@@ -14,6 +14,7 @@ import InteractiveAlert from './InteractiveAlert';
 import AlertHistory from './AlertHistory';
 import ObjectivesPanel from './ObjectivesPanel';
 import TutorialSystem from './TutorialSystem';
+import AchievementsPanel from './AchievementsPanel';
 import GraphView from './views/GraphView';
 import MapView from './views/MapView';
 import AnalyticsView from './views/AnalyticsView';
@@ -37,10 +38,13 @@ export default function Dashboard() {
         dismissAlert,
         dismissedAlerts,
         reviewAlert,
+        newAchievements,
+        clearNewAchievements,
     } = useSimulation();
 
     const [showAlertHistory, setShowAlertHistory] = useState(false);
     const [showObjectives, setShowObjectives] = useState(false);
+    const [showAchievements, setShowAchievements] = useState(false);
     const [showTutorial, setShowTutorial] = useState(!isTutorialCompleted());
 
     const showSidebars = activeView === 'graph' || activeView === 'map';
@@ -164,6 +168,31 @@ export default function Dashboard() {
                             </div>
                         </button>
 
+                        {/* Achievements Toggle Button */}
+                        <button
+                            onClick={() => setShowAchievements(!showAchievements)}
+                            className="px-4 py-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border)] hover:border-accent transition-colors shadow-xl relative"
+                        >
+                            <div className="flex items-center gap-2">
+                                <span className="text-xl">🏆</span>
+                                <div className="text-left">
+                                    <div className="font-mono text-[9px] tracking-[1px] text-white">
+                                        ACHIEVEMENTS
+                                    </div>
+                                    <div className="font-mono text-[7px] text-accent">
+                                        {state.achievements.filter(a => a.unlocked).length}/{state.achievements.length}
+                                    </div>
+                                </div>
+                            </div>
+                            {newAchievements.length > 0 && (
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-accent rounded-full flex items-center justify-center">
+                                    <span className="font-mono text-[8px] text-black font-bold">
+                                        {newAchievements.length}
+                                    </span>
+                                </div>
+                            )}
+                        </button>
+
                         {/* Alert History Toggle Button */}
                         <button
                             onClick={() => setShowAlertHistory(!showAlertHistory)}
@@ -215,6 +244,18 @@ export default function Dashboard() {
                 <ObjectivesPanel
                     objectives={state.objectives}
                     onClose={() => setShowObjectives(false)}
+                />
+            )}
+
+            {/* Achievements Panel */}
+            {showAchievements && (
+                <AchievementsPanel
+                    achievements={state.achievements}
+                    totalScore={state.totalScore}
+                    onClose={() => {
+                        setShowAchievements(false);
+                        clearNewAchievements();
+                    }}
                 />
             )}
 

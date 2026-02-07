@@ -48,6 +48,21 @@ export interface TimelineEvent {
     playerResponse?: string;    // selected option id
 }
 
+export interface Achievement {
+    id: string;
+    title: string;
+    description: string;
+    icon: string;           // emoji icon
+    category: 'investigation' | 'strategy' | 'speed' | 'mastery' | 'special';
+    tier: 'bronze' | 'silver' | 'gold' | 'platinum';
+    unlocked: boolean;
+    unlockedAt?: number;    // timestamp
+    progress?: number;      // 0-100 for progressive achievements
+    maxProgress?: number;   // total needed
+    hidden?: boolean;       // hidden until unlocked
+    points: number;         // achievement points
+}
+
 export interface ResponseOption {
     id: string;
     label: string;
@@ -101,7 +116,11 @@ export interface SimulationState {
     elapsedDays: number;
     tick: number;
     playerResources: PlayerResources;
-    objectives: GameObjective[];    consequenceLogs: ConsequenceLog[];}
+    objectives: GameObjective[];
+    consequenceLogs: ConsequenceLog[];
+    achievements: Achievement[];
+    totalScore: number;
+}
 
 export interface GameObjective {
     id: string;

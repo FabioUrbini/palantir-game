@@ -2,14 +2,15 @@
 
 // hooks/useSimulation.ts - Master hook with consequences and objectives
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getSimulationState } from '../engine/generator';
 import { updateSourceCounters } from '../engine/sources';
 import { applyInvestigationConsequences, applyAlertResponseConsequences } from '../engine/consequences';
 import { updateObjectiveProgress, applyObjectiveRewards } from '../engine/objectives';
+import { checkAchievements, calculateScore } from '../engine/achievements';
 import { loadPlayerState, savePlayerState, type PersistedState } from './usePersistence';
 import { useToast } from './useToast';
-import type { SimulationState, Entity, TimelineEvent } from '../data/ontology';
+import type { SimulationState, Entity, TimelineEvent, Achievement } from '../data/ontology';
 
 export interface UseSimulationReturn {
     state: SimulationState;
@@ -27,6 +28,8 @@ export interface UseSimulationReturn {
     dismissAlert: () => void;
     dismissedAlerts: Set<number>;
     reviewAlert: (event: TimelineEvent) => void;
+    newAchievements: Achievement[];
+    clearNewAchievements: () => void;
 }
 
 /**
@@ -91,6 +94,9 @@ export function useSimulation(): UseSimulationReturn {
         const savedState = loadPlayerState();
         return savedState ? new Set(savedState.dismissedAlerts) : new Set();
     });
+    const [viewsVisited, setViewsVisited] = useState<Set<string>>(new Set(['graph']));
+    const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
+    const sessionStartTime = useRef<number>(Date.now());
 
     useEffect(() => {
         // Tick every second for counter animations (faster at higher speeds)
@@ -200,6 +206,47 @@ export function useSimulation(): UseSimulationReturn {
         return () => clearInterval(objectiveInterval);
     }, [showToast]);
 
+    // Achievement checking
+    useEffect(() => {
+        const achievementInterval = setInterval(() => {
+            const result = checkAchievements(
+                state.achievements,
+                state.entities,
+                state.objectives,
+                state.events,
+                state.playerResources,
+                viewsVisited,
+                enabledSources,
+                sessionStartTime.current
+            );
+
+            if (result.newlyUnlocked.length > 0) {
+                setState(prev => ({
+                    ...prev,
+                    achievements: result.achievements,
+                    totalScore: calculateScore(
+                        result.achievements,
+                        prev.objectives,
+                        prev.entities,
+                        prev.playerResources
+                    ),
+                }));
+                setNewAchievements(prev => [...prev, ...result.newlyUnlocked]);
+
+                // Show toast for each new achievement
+                result.newlyUnlocked.forEach(achievement => {
+                    showToast({
+                        type: 'success',
+                        message: `Achievement Unlocked: ${achievement.icon} ${achievement.title}!`,
+                        duration: 5000,
+                    });
+                });
+            }
+        }, 3000); // Check every 3 seconds
+
+        return () => clearInterval(achievementInterval);
+    }, [state.achievements, state.entities, state.objectives, state.events, state.playerResources, viewsVisited, enabledSources, showToast]);
+
     // Auto-save player state every 10 seconds
     useEffect(() => {
         const saveInterval = setInterval(() => {
@@ -276,6 +323,15 @@ export function useSimulation(): UseSimulationReturn {
 
         return () => clearInterval(saveInterval);
     }, [state.entities, state.objectives, state.playerResources, dismissedAlerts]);
+
+    // Track view changes for achievements
+    useEffect(() => {
+        setViewsVisited(prev => {
+            const next = new Set(prev);
+            next.add(activeView);
+            return next;
+        });
+    }, [activeView]);
 
     // Auto-trigger interactive alerts
     useEffect(() => {
@@ -481,6 +537,10 @@ export function useSimulation(): UseSimulationReturn {
         ? state.entities.find(e => e.id === selectedEntityId) || null
         : null;
 
+    const clearNewAchievements = useCallback(() => {
+        setNewAchievements([]);
+    }, []);
+
     return {
         state,
         selectedEntity,
@@ -497,5 +557,7 @@ export function useSimulation(): UseSimulationReturn {
         dismissAlert,
         dismissedAlerts,
         reviewAlert,
+        newAchievements,
+        clearNewAchievements,
     };
 }

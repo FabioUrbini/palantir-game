@@ -7,6 +7,7 @@ import { generateEvents, generateAlerts } from './events';
 import { generateDataSources } from './sources';
 import { getOperationPhase } from './narrative';
 import { generateObjectives } from './objectives';
+import { getInitialAchievements } from './achievements';
 
 // Operation start (epoch)
 const EPOCH = new Date('2025-11-01T00:00:00Z').getTime();
@@ -78,6 +79,8 @@ export function getSimulationState(timeSpeed: number = 1): SimulationState {
         },
         objectives,
         consequenceLogs: [],
+        achievements: getInitialAchievements(),
+        totalScore: 0,
     };
 }
 
