@@ -289,7 +289,7 @@ export function useSimulation(): UseSimulationReturn {
             const criticalEvent = interactiveEvents.find(e => e.severity === 'critical');
             setActiveAlert(criticalEvent || interactiveEvents[0]);
         }
-    }, [state.events]);
+    }, [state.events, dismissedAlerts, activeAlert]);
 
     const selectEntity = useCallback((id: number | null) => {
         setSelectedEntityId(id);

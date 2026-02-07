@@ -30,9 +30,6 @@ export default function InteractiveAlert({ event, resources, onRespond, onDismis
         const interval = setInterval(() => {
             const remaining = calculateTimeLeft();
             setTimeLeft(remaining);
-            if (remaining === 0) {
-                onDismiss();
-            }
         }, 1000);
 
         return () => clearInterval(interval);
