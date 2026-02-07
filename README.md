@@ -63,39 +63,59 @@ npm start
 ## 📁 Project Structure
 
 ```
-palantir-sim/
-├── app/
-│   ├── layout.tsx          # Root layout with fonts
-│   ├── page.tsx            # Main entry point
-│   └── globals.css         # Global styles + animations
+palantir-game/
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx          # Root layout with fonts
+│   │   ├── page.tsx            # Main entry point
+│   │   ├── globals.css         # Global styles + animations
+│   │   └── ClientProviders.tsx # Client-side providers
+│   │
+│   ├── components/
+│   │   ├── Dashboard.tsx       # Master layout
+│   │   ├── TopBar.tsx          # Navigation + resources
+│   │   ├── AlertTicker.tsx     # Live scrolling feed
+│   │   ├── EntityActions.tsx   # Interactive action panel
+│   │   ├── ResourceBar.tsx     # Player resource display
+│   │   ├── InteractiveAlert.tsx # Time-sensitive alert modal
+│   │   ├── AlertHistory.tsx    # Alert review panel
+│   │   ├── ObjectivesPanel.tsx # Mission objectives tracker
+│   │   ├── TutorialSystem.tsx  # Onboarding tutorial
+│   │   ├── WelcomeModal.tsx    # First-time welcome
+│   │   ├── views/              # 5 analytical views
+│   │   └── ui/                 # Reusable UI components
+│   │
+│   ├── engine/
+│   │   ├── generator.ts        # Master procedural generator
+│   │   ├── seed.ts            # Seeded PRNG (mulberry32)
+│   │   ├── entities.ts        # Entity spawning logic
+│   │   ├── connections.ts     # Relationship generator
+│   │   ├── events.ts          # Timeline + interactive alerts
+│   │   ├── sources.ts         # Data source simulation
+│   │   ├── narrative.ts       # Operation phase progression
+│   │   ├── objectives.ts      # Mission system
+│   │   └── consequences.ts    # Action consequence system
+│   │
+│   ├── data/
+│   │   ├── ontology.ts        # Type definitions
+│   │   ├── templates.ts       # Name pools, event templates
+│   │   └── theme.ts           # Color maps, visual config
+│   │
+│   ├── hooks/
+│   │   ├── useSimulation.ts   # Master state hook
+│   │   ├── usePersistence.ts  # LocalStorage save/load
+│   │   ├── useToast.ts        # Toast notifications
+│   │   ├── useSoundEffects.ts # Audio feedback
+│   │   └── useTimeSync.ts     # Time synchronization
+│   │
+│   └── docs/
+│       └── ARCHITECTURE.md    # Technical documentation
 │
-├── components/
-│   ├── Dashboard.tsx       # Master layout
-│   ├── TopBar.tsx          # Navigation + resources
-│   ├── AlertTicker.tsx     # Live scrolling feed
-│   ├── EntityActions.tsx   # Interactive action panel
-│   ├── ResourceBar.tsx     # Player resource display
-│   ├── InteractiveAlert.tsx # Time-sensitive alert modal
-│   ├── AlertHistory.tsx    # Alert review panel
-│   ├── views/              # 5 analytical views
-│   └── ui/                 # Reusable UI components
-│
-├── engine/
-│   ├── generator.ts        # Master procedural generator
-│   ├── seed.ts            # Seeded PRNG (mulberry32)
-│   ├── entities.ts        # Entity spawning logic
-│   ├── connections.ts     # Relationship generator
-│   ├── events.ts          # Timeline + interactive alerts
-│   ├── sources.ts         # Data source simulation
-│   └── narrative.ts       # Operation phase progression
-│
-├── data/
-│   ├── ontology.ts        # Type definitions
-│   ├── templates.ts       # Name pools, event templates
-│   └── theme.ts           # Color maps, visual config
-│
-└── hooks/
-    └── useSimulation.ts   # Master state hook
+├── package.json
+├── tsconfig.json
+├── tailwind.config.ts
+├── next.config.js
+└── postcss.config.js
 ```
 
 ---
@@ -299,9 +319,9 @@ const value = rng(); // 0.0 - 1.0, deterministic
 ## 🐛 Known Issues
 
 - [ ] Canvas nodes can overlap (needs force-directed layout)
-- [ ] No mobile optimization yet (desktop-first)
-- [ ] Limited accessibility features
-- [ ] No save/load state persistence
+- [ ] Limited mobile optimization (desktop-first design)
+- [ ] Limited accessibility features (ARIA labels, keyboard nav)
+- [ ] No error boundaries for graceful failure handling
 
 ---
 
@@ -313,23 +333,26 @@ const value = rng(); // 0.0 - 1.0, deterministic
 - [x] Resource management
 - [x] Interactive alerts
 - [x] Alert history
+- [x] Tutorial system
+- [x] Objectives/missions tracking
+- [x] Save/load game state
+- [x] Resource regeneration over time
+- [x] Investigation consequences
+- [x] Toast notification system
 
-### **Phase 2** 🚧 In Progress
-- [ ] Resource regeneration over time
-- [ ] Investigation consequences
-- [ ] Connection revelation system
-- [ ] Entity state changes
-
-### **Phase 3** 📋 Planned
-- [ ] Mini-games (Connection Decoder, etc.)
+### **Phase 2** 📋 Planned
+- [ ] Mini-games (Connection Decoder, Packet Sniffer, Dead Drop Timer)
 - [ ] Achievement system
-- [ ] Save/load game state
-- [ ] Multi-language support
+- [ ] Sound effects and audio feedback
+- [ ] Enhanced mobile responsiveness
+- [ ] Keyboard shortcuts
 
-### **Phase 4** 💭 Future
+### **Phase 3** 💭 Future
 - [ ] Multiplayer collaboration
 - [ ] Real data source integration
 - [ ] Custom scenario builder
+- [ ] Multi-language support (i18n)
+- [ ] Performance monitoring dashboard
 - [ ] Mobile app
 
 ---
@@ -362,7 +385,7 @@ For issues, questions, or feature requests, please open an issue in the reposito
 
 ##  Documentation
 
-- **[Architecture Guide](docs/ARCHITECTURE.md)** - Deep dive into system design, data flow, and technical architecture
+- **[Architecture Guide](src/docs/ARCHITECTURE.md)** - Deep dive into system design, data flow, and technical architecture
 - **[AI Development Journey](AGENTS.md)** - How this project was built with AI-human collaboration
-- **[Project Review](../PROJECT_REVIEW.md)** - Comprehensive code quality assessment and recommendations
+- **[Advanced Features](ADVANCED_FEATURES.md)** - Additional gameplay mechanics and systems
 
