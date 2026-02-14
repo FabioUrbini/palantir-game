@@ -185,6 +185,11 @@ export interface GameObjective {
     };
     status: 'active' | 'completed' | 'failed';
     progress?: number;
+    isProcedural?: boolean;      // Generated dynamically
+    isHidden?: boolean;          // Hidden until discovered
+    isChainObjective?: boolean;  // Part of an objective chain
+    chainId?: string;            // Parent chain ID
+    failureConsequence?: string; // Description of what happens if failed
 }
 
 export interface ConsequenceLog {
